@@ -1,12 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "URL Storage Extension",
-  "version": "1.0",
-  "description": "Store data for specific URLs",
+  "name": "Stairwell",
+  "version": "1.0.0",
+  "description": "Course discussion and assignment rating platform for university students.",
   "permissions": [
-    "activeTab"
+    "storage",
+    "activeTab",
+    "tabs"
   ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "stairwell.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://oddxmqnzxcpaudsvihsg.supabase.co https://oddxmqnzxcpaudsvihsg.functions.supabase.co;"
   }
 }

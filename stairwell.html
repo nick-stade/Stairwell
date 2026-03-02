@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stairwell</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #0f1117;
+      --bg-secondary: #181a23;
+      --bg-tertiary: #1e2030;
+      --bg-hover: #252839;
+      --border: #2a2d3e;
+      --text-primary: #e2e4ed;
+      --text-secondary: #9497a8;
+      --text-muted: #6b6e80;
+      --accent: #6c8cff;
+      --accent-hover: #8ba3ff;
+      --accent-dim: rgba(108, 140, 255, 0.12);
+      --upvote: #ff6b35;
+      --star-filled: #f0b832;
+      --star-empty: #3a3d4e;
+      --success: #4ade80;
+      --error: #f87171;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+      --transition: 180ms ease;
+    }
+
+    body {
+      width: 380px;
+      min-height: 520px;
+      max-height: 600px;
+      overflow-y: auto;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+    }
+
+    body::-webkit-scrollbar { width: 6px; }
+    body::-webkit-scrollbar-track { background: transparent; }
+    body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Utility ── */
+    .hidden { display: none !important; }
+
+    .view {
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+      animation: fadeIn 200ms ease;
+    }
+    .view.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Header Bar ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .header .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 6px;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition), color var(--transition);
+      line-height: 1;
+    }
+    .header .back-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Logo / Branding ── */
+    .brand {
+      text-align: center;
+      margin-bottom: 28px;
+      padding-top: 12px;
+    }
+    .brand h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand p {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    /* ── Form Elements ── */
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .form-group input:focus {
+      border-color: var(--accent);
+    }
+    .form-group input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .code-input {
+      letter-spacing: 8px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), opacity var(--transition);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-hover);
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .hint a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .status-msg {
+      font-size: 12px;
+      text-align: center;
+      margin-top: 8px;
+      min-height: 18px;
+    }
+    .status-msg.error { color: var(--error); }
+    .status-msg.success { color: var(--success); }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Home: Course Accordion ── */
+    .home-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .home-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .user-badge {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+    .user-badge:hover { background: var(--bg-hover); }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state .icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .empty-state p {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .course-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: border-color var(--transition);
+    }
+    .course-card:hover { border-color: var(--accent); }
+
+    .course-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .course-header .course-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .course-header .course-code {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .course-header .course-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .course-header .chevron {
+      color: var(--text-muted);
+      font-size: 12px;
+      transition: transform var(--transition);
+      margin-left: 8px;
+    }
+    .course-card.open .chevron {
+      transform: rotate(90deg);
+    }
+
+    .assignment-list {
+      display: none;
+      border-top: 1px solid var(--border);
+    }
+    .course-card.open .assignment-list { display: block; }
+
+    .assignment-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px 10px 20px;
+      cursor: pointer;
+      transition: background var(--transition);
+      border-bottom: 1px solid var(--border);
+    }
+    .assignment-item:last-child { border-bottom: none; }
+    .assignment-item:hover { background: var(--bg-hover); }
+
+    .assignment-item .asgn-name {
+      font-size: 13px;
+      color: var(--text-primary);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .assignment-item .asgn-rating {
+      font-size: 11px;
+      color: var(--star-filled);
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+
+    /* ── Assignment / Thread View ── */
+    .rate-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      margin-bottom: 14px;
+      padding: 6px 12px;
+      background: var(--accent-dim);
+      border-radius: 20px;
+      border: none;
+      transition: background var(--transition);
+    }
+    .rate-link:hover { background: rgba(108,140,255,0.2); }
+
+    .comment-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+    .comment-list::-webkit-scrollbar { width: 4px; }
+    .comment-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .comment-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .comment-card .comment-author {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 3px;
+    }
+    .comment-card .comment-body {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.45;
+      word-wrap: break-word;
+    }
+    .comment-footer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .vote-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition), background var(--transition);
+    }
+    .vote-btn:hover { color: var(--upvote); background: rgba(255,107,53,0.1); }
+    .vote-btn.active { color: var(--upvote); }
+
+    .reply-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition);
+    }
+    .reply-toggle:hover { color: var(--text-secondary); }
+
+    .reply-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition);
+    }
+    .reply-btn:hover { color: var(--accent); }
+
+    .replies-container {
+      display: none;
+      margin-top: 8px;
+      margin-left: 14px;
+      padding-left: 10px;
+      border-left: 2px solid var(--border);
+    }
+    .replies-container.open { display: block; }
+
+    .replies-container .comment-card {
+      background: var(--bg-tertiary);
+      border-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .reply-input-container {
+      display: none;
+      margin-top: 8px;
+    }
+    .reply-input-container.open { display: flex; gap: 6px; }
+    .reply-input-container input {
+      flex: 1;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 12px;
+      outline: none;
+    }
+    .reply-input-container input:focus { border-color: var(--accent); }
+    .reply-input-container button {
+      padding: 7px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Bottom compose bar */
+    .compose-bar {
+      display: flex;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .compose-bar input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 13px;
+      outline: none;
+    }
+    .compose-bar input:focus { border-color: var(--accent); }
+    .compose-bar input::placeholder { color: var(--text-muted); }
+    .compose-bar button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .compose-bar button:hover { background: var(--accent-hover); }
+
+    /* ── Rating View ── */
+    .rating-metric {
+      margin-bottom: 18px;
+    }
+    .rating-metric .metric-label {
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .star-row {
+      display: flex;
+      gap: 6px;
+    }
+    .star-row .star {
+      font-size: 24px;
+      color: var(--star-empty);
+      cursor: pointer;
+      transition: color 120ms ease, transform 120ms ease;
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+    }
+    .star-row .star:hover { transform: scale(1.15); }
+    .star-row .star.filled { color: var(--star-filled); }
+
+    /* ── Logout confirm ── */
+    .logout-confirm {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .logout-confirm.active { display: flex; }
+    .logout-dialog {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 280px;
+      text-align: center;
+    }
+    .logout-dialog p {
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .logout-dialog .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    .logout-dialog .btn-row .btn { flex: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ LOGIN VIEW: Email Step ═══════════ -->
+  <div id="view-login-email" class="view">
+    <div class="brand">
+      <h1>Stairwell</h1>
+      <p>Course discussions &amp; ratings</p>
+    </div>
+
+    <div class="form-group">
+      <label for="login-email">University email</label>
+      <input type="email" id="login-email" placeholder="you@mines.edu" />
+    </div>
+    <div class="form-group">
+      <label for="login-first">First name</label>
+      <input type="text" id="login-first" placeholder="John" />
+    </div>
+    <div class="form-group">
+      <label for="login-last">Last name</label>
+      <input type="text" id="login-last" placeholder="Doe" />
+    </div>
+
+    <button id="btn-send-code" class="btn btn-primary">Send verification code</button>
+    <div id="login-email-status" class="status-msg"></div>
+
+    <p class="hint">
+      By signing up you agree to the
+      <a href="https://stairwell.it.com/privacy" target="_blank">privacy policy</a>.
+    </p>
+  </div>
+
+  <!-- ═══════════ LOGIN VIEW: Code Step ═══════════ -->
+  <div id="view-login-code" class="view">
+    <div class="brand">
+      <h1>Stairwell</h1>
+      <p>Enter your verification code</p>
+    </div>
+
+    <div class="form-group">
+      <input type="text" id="login-code" class="code-input" placeholder="000000" maxlength="6" />
+    </div>
+
+    <button id="btn-verify-code" class="btn btn-primary">Verify</button>
+    <div id="login-code-status" class="status-msg"></div>
+
+    <p class="hint">
+      Check your spam folder if you don't see the email.<br/>
+      <a href="#" id="btn-resend">Resend code</a> · <a href="#" id="btn-back-email">Change email</a>
+    </p>
+  </div>
+
+  <!-- ═══════════ HOME VIEW ═══════════ -->
+  <div id="view-home" class="view">
+    <div class="home-header">
+      <h2>My Courses</h2>
+      <button id="btn-user-badge" class="user-badge"></button>
+    </div>
+    <div id="courses-container"></div>
+  </div>
+
+  <!-- ═══════════ ASSIGNMENT / THREAD VIEW ═══════════ -->
+  <div id="view-assignment" class="view">
+    <div class="header">
+      <button id="btn-back-home" class="back-btn">←</button>
+      <h2 id="assignment-title"></h2>
+    </div>
+    <button id="btn-rate" class="rate-link">★ Rate this assignment</button>
+    <div id="comments-list" class="comment-list"></div>
+    <div class="compose-bar">
+      <input type="text" id="comment-input" placeholder="Write a comment…" />
+      <button id="btn-post-comment">Post</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ RATING VIEW ═══════════ -->
+  <div id="view-rating" class="view">
+    <div class="header">
+      <button id="btn-back-assignment" class="back-btn">←</button>
+      <h2 id="rating-title"></h2>
+    </div>
+
+    <div id="rating-metrics"></div>
+
+    <button id="btn-submit-rating" class="btn btn-primary" style="margin-top: 10px;">Submit rating</button>
+    <div id="rating-status" class="status-msg"></div>
+  </div>
+
+  <!-- ═══════════ LOGOUT MODAL ═══════════ -->
+  <div id="logout-modal" class="logout-confirm">
+    <div class="logout-dialog">
+      <p>Sign out of Stairwell?</p>
+      <div class="btn-row">
+        <button id="btn-logout-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="btn-logout-confirm" class="btn btn-primary">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="supabase.js"></script>
+  <script src="stairwell.js"></script>
+</body>
+</html>
