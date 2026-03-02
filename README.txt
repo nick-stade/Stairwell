@@ -1,7 +1,1 @@
-To test:
-
-Open Chrome and go to chrome://extensions/
-Enable "Developer mode" (toggle in top right)
-Click "Load unpacked"
-Select your extension directory
-Navigate to any webpage and click your extension icon
+This project is the minimum viable product for an application which integrates with Canvas LMS. This release is only to be used with 3 classes accross The University of Colorado at Boulder and The Colorado School of Mines. Information is protected in accordance with FERPA.

@@ -327,7 +327,6 @@ async function enterApp() {
         /\/courses\/(\d+)\/assignments\/(\d+)/
       );
       if (match) {
-        console.log("entered the match");
         const canvasCourseId = parseInt(match[1]);
         const canvasAssignmentId = parseInt(match[2]);
 
